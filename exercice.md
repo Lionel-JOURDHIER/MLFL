@@ -23,7 +23,7 @@ C'est un cas d'école de **dataset déséquilibré** (beaucoup plus de gens rest
 
 * **Dataset :** *Car Details Dataset* ou *Toyota Corolla dataset*.
 * **Challenge Pandas :** Extraire l'année ou la marque à partir d'une chaîne de caractères, gérer les valeurs aberrantes (ex: une voiture à 0km ou 1 euro).
-* **Challenge Scikit-Learn :** Comparer la **Régression Linéaire** et les **K-Nearest Neighbors (KNN)**. Mise en place obligatoire du `StandardScaler`.
+* **Challenge Scikit-Learn :** Comparer la **Régression Linéaire**. Mise en place obligatoire du `StandardScaler`.
 
 * **Cible :** Price / selling_price
 
