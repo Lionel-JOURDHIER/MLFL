@@ -1,0 +1,61 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.log
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+
+# PyTest cache
+.pytest_cache/
+.cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Build / Distribution
+build/
+dist/
+pip-wheel-metadata/
+*.whl
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# IDE / Editors
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# MyPy / Pylint / Ruff
+.mypy_cache/
+.mypy_cache/*
+.pyre/
+.ruff_cache/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Project-specific
+app/__pycache__/
+test/__pycache__/
