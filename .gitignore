@@ -36,6 +36,12 @@ pip-wheel-metadata/
 .vscode/
 *.code-workspace
 
+#MlFlow
+
+mlruns/ 
+mlflow.db
+
+
 # IDE / Editors
 .idea/
 *.iml
