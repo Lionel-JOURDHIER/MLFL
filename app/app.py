@@ -9,10 +9,16 @@ API_PORT = int(os.getenv('FASTAPI_PORT'))
 API_URL = os.getenv('API_ROOT_URL')
 API_ROOT_URL = f"http://{API_URL}:{API_PORT}"
 
-
-
 st.title("Bienvenue dans votre application pour générer des Model de Machine Learning")
 st.header("Selection du Dataset")
 dataset = st.selectbox("Choisissez le dataset", ["iris", "penguins", "titanic", "churn"])
-if st.button("ping l'API (Route /)"):
-    response = requests.get(API_ROOT_URL)
+json_dataset = {"name": dataset}
+if st.button("Telecharger le Dataset"):
+    route_dataset = API_ROOT_URL + "/dataset"
+    response = requests.post(route_dataset, json=json_dataset)
+    if response.status_code == 200:
+            response_json = response.json()
+            CURRENT_DATASET = response_json["dataset"]
+            st.dataframe(CURRENT_DATASET, width="stretch")
+    else : 
+        st.error(f"L'API a répondu avec une erreur : {response.status_code}")

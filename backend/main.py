@@ -7,7 +7,7 @@ from loguru import logger
 from pydantic import BaseModel, Field, ConfigDict
 from fastapi import FastAPI, HTTPException
 from typing import Literal
-from backend.module.cleandataset import df_iris, df_penguins, df_titanic, df_churn
+from module.cleandataset import df_iris, df_penguins, df_titanic, df_churn
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -30,14 +30,14 @@ class Dataset(BaseModel):
     name: Literal["iris","penguins","titanic","churn"] = Field(min_length=1, description="The name of the dataset")
 
 class DatasetResponse(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    dataset : pd.DataFrame
+    dataset : dict
 
 class DatasetColumnsResponse(BaseModel):
     columns : list[str]
 
 class Data(BaseModel):
-    dataset : pd.DataFrame
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    dataset : dict
     x_axis: str = Field(min_length=1, description="Data use in the x_axis of the scatterplot")
     y_axis: str = Field(min_length=1, description="Data use in the y_axis of the scatterplot")
     color: str = Field(min_length=1, description="Color used for the data points")
@@ -64,7 +64,7 @@ def root():
     '''
     return {"message": "API is running"}
 
-@app.get("/dataset")
+@app.post("/dataset")
 def show_dataset(request: Dataset):
     '''
     Endpoint to show dataset information
@@ -83,7 +83,8 @@ def show_dataset(request: Dataset):
     try : 
         if request.name : 
             dataset = dataset_dict.get(request.name)
-            return {"dataset": dataset}
+            df_dict = dataset.to_dict()
+            return {"dataset": df_dict}
         else : 
             return {"message":"Please provide a valid dataset name"}
     except Exception as e:
@@ -120,14 +121,36 @@ def show_graph(request: Data):
     logger.info(f"Appel API : Selection GRAPH")
     try : 
         dataset = request.dataset
+        df_dataset = pd.DataFrame(dataset)
         x_axis = request.x_axis
         y_axis = request.y_axis
         color = request.color
         size = request.size
-        graph = sns.scatterplot(x=x_axis, y=y_axis, hue=color, size=size, data=dataset)
+        graph = sns.scatterplot(x=x_axis, y=y_axis, hue=color, size=size, data=df_dataset)
         return graph.figure
     except Exception as e:
         logger.error(f"Error code 500 in API post /graph : {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing the request")
 
+if __name__ == "__main__" :
+
+    # 1 on récupère le port de l'API
+    try : 
+        port = API_PORT
+        host = API_URL
+        url = API_ROOT_URL
+    except ValueError :
+        print("Erreur : FASTAPI_PORT invalide, utilisation du port par défaut 8000.")
+        port = 8000
+
+    logger.info(f"Démarrage du serveur FastAPI sur {API_ROOT_URL}")
+
+    # 2. On lance uvicorn
+    uvicorn.run(
+        "main:app",
+        reload = True,
+        port = port,
+        host = host,
+        log_level="debug"
+    )
 
