@@ -35,18 +35,6 @@ class DatasetResponse(BaseModel):
 class DatasetColumnsResponse(BaseModel):
     columns : list[str]
 
-class Data(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    dataset : dict
-    x_axis: str = Field(min_length=1, description="Data use in the x_axis of the scatterplot")
-    y_axis: str = Field(min_length=1, description="Data use in the y_axis of the scatterplot")
-    color: str = Field(min_length=1, description="Color used for the data points")
-    size: str = Field(min_length=1, description="Size used for the data points")
-
-class GraphResponse(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    graph : plt.Axes
-
 class TrainingConfig(BaseModel):
     max_iter : int = Field(description="The maximum number of iterations")
     C : float = Field(description="The regularization parameter")
@@ -91,7 +79,7 @@ def show_dataset(request: Dataset):
         logger.error(f"Error code 500 in API get /dataset : {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing the request")
 
-@app.get("/columns")
+@app.post("/columns")
 def show_columns(request: Dataset):
     '''
     Endpoint to show dataset columns
@@ -102,34 +90,12 @@ def show_columns(request: Dataset):
     '''
     logger.info(f"Appel API : Selection COLONNES : {request.name}")
     try : 
-        dataset = show_dataset(request.name)["dataset"]
+        dict_dataset = show_dataset(request)["dataset"]
+        dataset = pd.DataFrame(dict_dataset)
         list_columns = dataset.columns.tolist()
         return {"columns": list_columns}
     except Exception as e:
         logger.error(f"Error code 500 in API get /columns : {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while processing the request")
-
-@app.post("/graph")
-def show_graph(request: Data):
-    '''
-    Endpoint to show graph of dataset
-    Args : 
-       request (Data): Pydantic Request with dataset and columns used in making the graph
-    Returns :
-        graph (pyplot.figure): A plot figure representing the graph of the dataset
-    '''
-    logger.info(f"Appel API : Selection GRAPH")
-    try : 
-        dataset = request.dataset
-        df_dataset = pd.DataFrame(dataset)
-        x_axis = request.x_axis
-        y_axis = request.y_axis
-        color = request.color
-        size = request.size
-        graph = sns.scatterplot(x=x_axis, y=y_axis, hue=color, size=size, data=df_dataset)
-        return graph.figure
-    except Exception as e:
-        logger.error(f"Error code 500 in API post /graph : {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing the request")
 
 if __name__ == "__main__" :

@@ -16,3 +16,4 @@ df_titanic = df_titanic.convert_dtypes()
 
 # Import dataset Churn from csv
 df_churn = pd.read_csv('data/churn.csv')
+df_churn =df_churn.drop(columns=["RowNumber","CustomerId","Surname"])
