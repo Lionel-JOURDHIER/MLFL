@@ -48,7 +48,6 @@ else:
     st.error("Impossible de récupérer les colonnes")
 
 if st.button("Générer le graph"):
-    route_graph = API_ROOT_URL + "/graph"
     fig, ax = plt.subplots()
     sns.scatterplot(
         x=x_axis, 

@@ -3,11 +3,13 @@ import uvicorn
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import datetime as dt
 from loguru import logger
 from pydantic import BaseModel, Field, ConfigDict
 from fastapi import FastAPI, HTTPException
 from typing import Literal
 from module.cleandataset import df_iris, df_penguins, df_titanic, df_churn
+from module.scikitlearn import metrics_model, training_model
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -36,11 +38,18 @@ class DatasetColumnsResponse(BaseModel):
     columns : list[str]
 
 class TrainingConfig(BaseModel):
+    dataset_name : Literal["iris","penguins","titanic","churn"] = Field(min_length=1, description="The name of the dataset")
+    dataset : dict
     max_iter : int = Field(description="The maximum number of iterations")
     C : float = Field(description="The regularization parameter")
     solver : Literal["lbfgs", "liblinear", "newton-cg", "sag", "saga", "newton-cholesky"] = Field(default="lbfgs", description="The optimization algorithm")
-    # TODO : Forcer les L1 en fonction du solver
-    l1_ratio : float = Field(min=0, max=1, description="The L1 ratio")
+
+class TrainingResponse(BaseModel):
+    name : str
+    accuracy_score : float = Field(description="The accuracy of the model")
+    classification_report_test : str = Field(description="The classification report of the model")
+    classification_report_train : str = Field(description="The classification report of the model during training")
+    confusion_matrix : dict
 
 class Model(BaseModel):
     name: str = Field(min_length=1, description="The name of the model")
@@ -97,6 +106,47 @@ def show_columns(request: Dataset):
     except Exception as e:
         logger.error(f"Error code 500 in API get /columns : {e}")
         raise HTTPException(status_code=500, detail="An error occurred while processing the request")
+
+@app.post("/train")
+def train_model(request: TrainingConfig):
+    '''
+    Endpoint to train a model on the dataset
+    Args : 
+        request (Dataset): The dataset object containing the size of the data points
+    Returns :
+        response (dict): A dictionary containing the trained model and its evaluation metrics
+    '''
+    # Create model name and load the dataset
+    maintenant = dt.datetime.now()
+    horodatage = maintenant.strftime("%d/%m/%Y %H:%M:%S")
+    model_name = request.dataset_name + "_" + horodatage
+    logger.info(f"Appel API : Train MODEL {model_name}")
+    try : 
+        model, X_test, y_test, X_resampled, y_resampled = training_model(
+            request.dataset,
+            request.dataset_name,
+            max_iter=request.max_iter,
+            C=request.C,
+            solver = request.solver)
+        
+        accuracy_test, class_report_test, conf_matrix_json_test = metrics_model(model, X_test, y_test)
+        accuracy_train, class_report_train, conf_matrix_json_train = metrics_model(model, X_resampled, y_resampled)
+        response = {
+            "name" : model_name,
+            "accuracy_score" : accuracy_test,
+            "classification_report_test" : class_report_test,
+            "classification_report_train" : class_report_train,
+            "confusion_matrix" : conf_matrix_json_test
+        }
+        return response
+    except Exception as e :
+        logger.error(f"Erreur lors du train MODEL {model_name}")
+        return {"error": str(e)}
+
+
+
+
+
 
 if __name__ == "__main__" :
 
